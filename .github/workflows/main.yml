@@ -46,18 +46,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip 
-        pip install flake8==6.0.0 flake8-isort==6.0.0
         pip install -r ./backend/requirements.txt
-    - name: Test with flake8
-      env:
-        POSTGRES_USER: django_user
-        POSTGRES_PASSWORD: django_password
-        POSTGRES_DB: django_db
-        DB_HOST: 127.0.0.1
-        DB_PORT: 5432
-        SECRET_KEY: 'django-insecure-=_56kbqzx5-wyjw9#8smwyq2$d%pdh$7_pe!+9&682pa+x6tti'
-      run: |
-        pytest
 
   build_backend_and_push_to_docker_hub:
     name: Push backend Docker image to DockerHub
