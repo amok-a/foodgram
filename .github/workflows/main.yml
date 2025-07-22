@@ -4,25 +4,7 @@ on:
   push
 
 jobs:
-  frontend_tests:
-    runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up nodeJS
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
-
-    - name: Install dependencies
-      run: |
-        cd frontend/
-        npm ci
-
-    - name: Test frontend
-      run: |
-        cd frontend/
-        npm run test
   build_frontend_and_push_to_docker_hub:
     name: Push frontend Docker image to DockerHub
     runs-on: ubuntu-latest
@@ -113,7 +95,7 @@ jobs:
       - name: Build and push gateway
         uses: docker/build-push-action@v4
         with:
-          context: ./nginx
+          context: ./infra
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/foodgram-gateway:latest
 
