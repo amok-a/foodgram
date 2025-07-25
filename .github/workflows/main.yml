@@ -124,4 +124,6 @@ jobs:
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
           sudo docker compose -f docker-compose.production.yml exec backend mkdir -p /static
           sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /static/
+          sudo docker compose -f docker-compose.production.yml exec frontend mkdir -p /static
+          sudo docker compose -f docker-compose.production.yml exec frontend cp -r /app/build/. /static/
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py load_ingredients
