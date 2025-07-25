@@ -16,8 +16,8 @@
       image: aamok/foodgram-backend:latest
       env_file: ./.env
       volumes:
-        - ./staticfiles:/staticfiles:rw
         - static_volume:/backend_static
+        - ../data:/app/data 
 
     frontend:
       image: aamok/foodgram-frontend:latest
@@ -30,7 +30,6 @@
       image: aamok/foodgram-gateway
       volumes:
         - static_volume:/staticfiles/
-        - ./staticfiles:/staticfiles:rw
       env_file: .env
       ports:
         - 8000:80
