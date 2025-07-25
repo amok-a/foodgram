@@ -1,4 +1,3 @@
-version: '3.8'
 
 volumes:
   pg_data_production:
@@ -16,19 +15,19 @@ services:
     image: aamok/foodgram-backend:latest
     env_file: ./.env
     volumes:
-      - static_volume:/app/backend-static
+      - static_volume:/backend-static
 
   frontend:
     image: aamok/foodgram-frontend:latest
     env_file: ./.env
-    command: sh -c "mkdir -p /app/static/frontend && cp -r /app/build/. /app/static/frontend/ && sleep infinity"
+    command: cp -r /app/build/. /static/frontend/
     volumes:
-      - static_volume:/app/static
+      - static_volume:/frontend-static
 
   nginx:
     image: aamok/foodgram-gateway
     volumes:
-      - static_volume:/staticfiles
+      - static_volume:/staticfiles/
     env_file: .env
     ports:
       - 8000:80
