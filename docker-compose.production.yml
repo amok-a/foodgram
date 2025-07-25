@@ -17,6 +17,7 @@
       env_file: ./.env
       volumes:
         - static_volume:/backend_static
+        - ./data:/app/data:ro
 
     frontend:
       image: aamok/foodgram-frontend:latest
