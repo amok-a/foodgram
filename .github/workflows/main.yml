@@ -1,4 +1,5 @@
 name: Deploy Foodgram
+
 on:
   push
 
@@ -105,7 +106,7 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "docker-compose.production.yml,data/ingredients.json"
+        source: "docker-compose.production.yml,"
         target: "foodgram"
     
     - name: Executing remote ssh commands to deploy
@@ -121,7 +122,6 @@ jobs:
           sudo docker compose -f docker-compose.production.yml down
           sudo docker compose -f docker-compose.production.yml up -d
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
-          sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
-          sudo docker compose -f docker-compose.production.yml exec nginx sh -c 'cp -r /staticfiles/frontend/static/* /staticfiles/ 2>/dev/null || true'
-          sudo docker compose -f docker-compose.production.yml restart nginx
-
+          sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
+          sudo docker compose -f docker-compose.production.yml exec backend mkdir -p /static
+          sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /static/
