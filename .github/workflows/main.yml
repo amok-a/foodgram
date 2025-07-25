@@ -106,8 +106,9 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "docker-compose.production.yml,"
+        source: "docker-compose.production.yml,data/ingredients.json"
         target: "foodgram"
+        rm: true
     
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
@@ -118,7 +119,6 @@ jobs:
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
           cd foodgram
-          mkdir -p data
           sudo docker compose -f docker-compose.production.yml pull
           sudo docker compose -f docker-compose.production.yml down
           sudo docker compose -f docker-compose.production.yml up -d
