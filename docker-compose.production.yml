@@ -16,13 +16,12 @@
       image: aamok/foodgram-backend:latest
       env_file: ./.env
       volumes:
-        - static_volume:/backend_static
-        - ../data:/app/data 
+        - static_volume:/app/collected_static
 
     frontend:
       image: aamok/foodgram-frontend:latest
       env_file: ./.env
-      command: cp -r /app/build/. /frontend_static/
+      command: sh -c "cp -r /app/build/* /frontend_static/"
       volumes:
         - static_volume:/frontend_static
 
