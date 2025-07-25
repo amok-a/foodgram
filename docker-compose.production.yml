@@ -16,19 +16,21 @@
       image: aamok/foodgram-backend:latest
       env_file: ./.env
       volumes:
-        - static_volume:/static
+        - static_volume:/app/static
+        - media_volume:/app/media
 
     frontend:
       image: aamok/foodgram-frontend:latest
       env_file: ./.env
-      command: cp -r /app/build/. /static/
+      command: cp -r /app/build/. /static/frontend/
       volumes:
         - static_volume:/frontend_static
 
     nginx:
       image: aamok/foodgram-gateway
       volumes:
-        - static_volume:/staticfiles/
+        - static_volume:/staticfiles
+        - media_volume:/media
       env_file: .env
       ports:
         - 8000:80
