@@ -105,7 +105,7 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "docker-compose.production.yml,data/ingredients.json"
+        source: "docker-compose.production.yml"
         target: "foodgram"
         rm: true
     
