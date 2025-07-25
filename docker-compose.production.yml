@@ -21,7 +21,7 @@
     frontend:
       image: aamok/foodgram-frontend:latest
       env_file: ./.env
-      command: sh -c "cp -r /app/build/* /frontend_static/"
+      command: cp -r /app/build/. /frontend_static/
       volumes:
         - static_volume:/frontend_static
 
