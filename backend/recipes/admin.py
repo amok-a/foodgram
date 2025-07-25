@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django import forms
+import json
+
 
 from .models import (Tag, Ingredient, Recipe,
                      RecipeIngredient, Favorite, ShoppingCart)
@@ -127,6 +129,15 @@ class RecipeAdmin(admin.ModelAdmin):
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
     search_fields = ('name',)
+    def import_from_json(self, request, queryset):
+        with open('data/ingredients.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            for item in data:
+                Ingredient.objects.get_or_create(
+                    name=item['name'],
+                    measurement_unit=item['measurement_unit']
+                )
+        self.message_user(request, "Ингредиенты успешно загружены")
 
 
 admin.site.register(Tag)
