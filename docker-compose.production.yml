@@ -31,7 +31,7 @@
       image: aamok/foodgram-gateway
       volumes:
         - static_volume:/staticfiles/
-        - media_volume:/app/media
+        - media_volume:/mediafiles/
       env_file: .env
       ports:
         - 8000:80
