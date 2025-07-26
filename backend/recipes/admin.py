@@ -126,6 +126,7 @@ class RecipeAdmin(admin.ModelAdmin):
     readonly_fields = ('favorite_count',)
 
 
+@admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
     search_fields = ('name',)
@@ -143,7 +144,7 @@ class IngredientAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Tag)
-admin.site.register(Ingredient, IngredientAdmin)
+admin.site.register(IngredientAdmin)
 admin.site.register(RecipeIngredient)
 admin.site.register(Favorite)
 admin.site.register(ShoppingCart)
