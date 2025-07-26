@@ -126,11 +126,9 @@ class RecipeAdmin(admin.ModelAdmin):
     readonly_fields = ('favorite_count',)
 
 
-@admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
     search_fields = ('name',)
-    actions = ['import_from_json']
 
     def import_from_json(self, request, queryset):
         with open('data/ingredients.json', 'r', encoding='utf-8') as f:
@@ -143,21 +141,8 @@ class IngredientAdmin(admin.ModelAdmin):
         self.message_user(request, "Ингредиенты успешно загружены")
 
 
-@admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug')
-
-
-@admin.register(RecipeIngredient)
-class RecipeIngredientAdmin(admin.ModelAdmin):
-    list_display = ('recipe', 'ingredient', 'amount')
-
-
-@admin.register(Favorite)
-class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ('user', 'recipe')
-
-
-@admin.register(ShoppingCart)
-class ShoppingCartAdmin(admin.ModelAdmin):
-    list_display = ('user', 'recipe')
+admin.site.register(Tag)
+admin.site.register(Ingredient, IngredientAdmin)
+admin.site.register(RecipeIngredient)
+admin.site.register(Favorite)
+admin.site.register(ShoppingCart)
