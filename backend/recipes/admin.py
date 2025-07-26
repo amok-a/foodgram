@@ -113,6 +113,9 @@ class RecipeAdmin(admin.ModelAdmin):
         ('Теги', {
             'fields': ('tags',),
         }),
+        ('Ингредиенты', {
+            'fields': ('ingredients',),
+        }),
         ('Статистика', {
             'fields': ('favorite_count',),
         }),
