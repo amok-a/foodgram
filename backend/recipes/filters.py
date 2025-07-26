@@ -8,7 +8,16 @@ class RecipeFilter(django_filters.FilterSet):
     is_in_shopping_cart = django_filters.BooleanFilter(
         method='filter_is_in_shopping_cart')
     author = django_filters.NumberFilter(field_name='author__id')
-    tags = django_filters.AllValuesMultipleFilter(field_name='tags__slug')
+    tags = django_filters.CharFilter(method='filter_tags')
+
+    def filter_tags(self, queryset, name, value):
+        if value:
+            if isinstance(value, list):
+                tags = value
+            else:
+                tags = value.split(',')
+            return queryset.filter(tags__slug__in=tags).distinct()
+        return queryset
 
     class Meta:
         model = Recipe
