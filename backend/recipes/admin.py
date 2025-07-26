@@ -143,7 +143,21 @@ class IngredientAdmin(admin.ModelAdmin):
         self.message_user(request, "Ингредиенты успешно загружены")
 
 
-admin.site.register(Tag)
-admin.site.register(RecipeIngredient)
-admin.site.register(Favorite)
-admin.site.register(ShoppingCart)
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'color', 'slug')
+
+
+@admin.register(RecipeIngredient)
+class RecipeIngredientAdmin(admin.ModelAdmin):
+    list_display = ('recipe', 'ingredient', 'amount')
+
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ('user', 'recipe')
+
+
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(admin.ModelAdmin):
+    list_display = ('user', 'recipe')
