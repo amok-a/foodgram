@@ -129,6 +129,7 @@ class RecipeAdmin(admin.ModelAdmin):
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
     search_fields = ('name',)
+    actions = ['import_from_json']
 
     def import_from_json(self, request, queryset):
         with open('data/ingredients.json', 'r', encoding='utf-8') as f:
