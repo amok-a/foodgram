@@ -28,6 +28,7 @@ import logging
 from rest_framework.views import APIView
 logger = logging.getLogger(__name__)
 
+
 class UserCreateView(APIView):
     def post(self, request):
         logger.debug(f"UserCreateView: Received  {request.data}")
@@ -165,7 +166,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return Favorite.objects.filter(
-                user=request.user, 
+                user=request.user,
                 recipe=obj
             ).exists()
         return False
