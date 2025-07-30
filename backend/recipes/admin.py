@@ -25,7 +25,7 @@ class UserAdmin(UserAdmin):
             "classes": ("wide",),
             "fields": (
                 "username", "password1", "password2",
-                "email", "first_name", "last_name"),
+                "email", "first_name", "last_name", "avatar"),
         }),
     )
     readonly_fields = ("recipe_count", "subscriber_count")

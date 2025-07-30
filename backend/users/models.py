@@ -37,7 +37,7 @@ class User(AbstractUser):
         help_text=("Загрузите изображение профиля.")
     )
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'username']
 
     class Meta:
         verbose_name = ("Пользователь")
