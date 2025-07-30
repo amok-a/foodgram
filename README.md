@@ -26,6 +26,7 @@ CI/CD
 git clone https://github.com/amok-a/foodgram
 cd foodgram
 cd infra
+Пример заполнения .env в example.env
 docker compose up -d --build
 docker compose exec backend python manage.py migrate
 docker compose exec backend python manage.py collectstatic --noinput
