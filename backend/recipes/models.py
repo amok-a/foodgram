@@ -8,6 +8,7 @@ TAG_MAX_LENGTH = 50
 UNIT_MAX_LENGTH = 50
 NAME_MAX_LENGTH = 255
 
+
 class Tag(models.Model):
     name = models.CharField(
         'Название',

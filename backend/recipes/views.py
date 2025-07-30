@@ -8,7 +8,6 @@ from rest_framework import (
 from django.db.models import Count
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
 
 from users.models import User
@@ -81,7 +80,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 user.save()
 
             return Response(
-                {'message': 'Аватарка успешно удалена'}, 
+                {'message': 'Аватарка успешно удалена'},
                 status=status.HTTP_204_NO_CONTENT
             )
         else:
