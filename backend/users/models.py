@@ -2,18 +2,21 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 
-class CustomUser(AbstractUser):
+NAME_MAX_LENGTH = 150
+
+
+class User(AbstractUser):
 
     first_name = models.CharField(
         ("Имя"),
-        max_length=150,
+        max_length=NAME_MAX_LENGTH,
         blank=False,
         null=False,
         help_text=("Обязательное поле.")
     )
     last_name = models.CharField(
         ("Фамилия"),
-        max_length=150,
+        max_length=NAME_MAX_LENGTH,
         blank=False,
         null=False,
         help_text=("Обязательное поле.")
@@ -33,6 +36,8 @@ class CustomUser(AbstractUser):
         null=True,
         help_text=("Загрузите изображение профиля.")
     )
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
     class Meta:
         verbose_name = ("Пользователь")
@@ -41,6 +46,14 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    @property
+    def recipe_count(self):
+        return self.recipes.count()
+
+    @property
+    def subscriber_count(self):
+        return self.following.count()
 
     @classmethod
     def create_user(cls, email, username, password=None, **extra_fields):

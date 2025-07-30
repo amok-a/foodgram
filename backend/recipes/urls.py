@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     UserViewSet, TagViewSet, IngredientViewSet,
-    RecipeViewSet, SubscriptionViewSet, UserCreateView
+    RecipeViewSet, UserCreateView
 )
 
 router = DefaultRouter()
@@ -15,10 +15,10 @@ router.register(r'recipes', RecipeViewSet, basename='recipes')
 urlpatterns = [
     path('users/', UserCreateView.as_view(), name='user-create'),
     path('users/subscriptions/',
-         SubscriptionViewSet.as_view({'get': 'list'}),
+         UserViewSet.as_view({'get': 'list'}),
          name='user-subscriptions'),
     path('users/<int:author_id>/subscribe/',
-         SubscriptionViewSet.as_view({'post': 'create', 'delete': 'destroy'}),
+         UserViewSet.as_view({'post': 'create', 'delete': 'destroy'}),
          name='subscribe'),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),

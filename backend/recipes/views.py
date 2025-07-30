@@ -3,15 +3,15 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
-    viewsets, mixins, status, filters, permissions
+    viewsets, status, filters, permissions
 )
+from django.db.models import Count
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser
 
-from users.models import CustomUser
+from users.models import User
 from .models import (
     Tag, Ingredient, Recipe,
     RecipeIngredient, Favorite, ShoppingCart, Subscription
@@ -20,8 +20,9 @@ from .serializers import (
     TagSerializer, IngredientSerializer, UserSerializer,
     RecipeReadSerializer, RecipeWriteSerializer,
     FavoriteSerializer, ShoppingCartSerializer,
-    SubscriptionSerializer, CustomUserCreateSerializer
+    SubscriptionSerializer, UserCreateSerializer
 )
+from .pagination import Pagination
 from .permissions import IsAuthorOrReadOnly
 from .filters import RecipeFilter
 import logging
@@ -32,7 +33,7 @@ logger = logging.getLogger(__name__)
 class UserCreateView(APIView):
     def post(self, request):
         logger.debug(f"UserCreateView: Received  {request.data}")
-        serializer = CustomUserCreateSerializer(data=request.data)
+        serializer = UserCreateSerializer(data=request.data)
         if serializer.is_valid():
             logger.debug(
                 f"UserCreateView: Validated  {serializer.validated_data}")
@@ -42,21 +43,91 @@ class UserCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CustomPagination(PageNumberPagination):
-    page_size = 6
-    page_size_query_param = 'limit'
-
-
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
+    queryset = User.objects.annotate(recipes_count=Count('recipes'))
+    queryset = User.objects.all()
     serializer_class = UserSerializer
-    pagination_class = CustomPagination
+    pagination_class = Pagination
     permission_classes = [permissions.AllowAny]
 
     @action(detail=False, methods=['get'])
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post', 'delete'],
+            permission_classes=[permissions.IsAuthenticated])
+    def avatar(self, request):
+        user = request.user
+
+        if request.method == 'POST':
+            avatar = request.FILES.get('avatar')
+            if not avatar:
+                return Response(
+                    {'error': 'Файл аватарки не предоставлен'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user.avatar = avatar
+            user.save()
+            serializer = self.get_serializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        elif request.method == 'DELETE':
+
+            if user.avatar:
+                user.avatar.delete()
+                user.avatar = None
+                user.save()
+
+            return Response(
+                {'message': 'Аватарка успешно удалена'}, 
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response(
+                {'error': 'У пользователя нет аватарки'},
+                status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post', 'delete'],
+            permission_classes=[permissions.IsAuthenticated])
+    def subscribe(self, request, pk=None):
+        author = get_object_or_404(User, id=pk)
+        user = request.user
+        if request.method == 'POST':
+            serializer = SubscriptionSerializer(
+                author,
+                data={},
+                context=self.get_serializer_context()
+            )
+            serializer.is_valid(raise_exception=True)
+
+            Subscription.objects.create(user=user, author=author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:  # DELETE
+            deleted_count, _ = Subscription.objects.filter(
+                user=user, author=author).delete()
+            if deleted_count == 0:
+                return Response(
+                    {'error': 'Вы не подписаны на этого пользователя'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['get'],
+            permission_classes=[permissions.IsAuthenticated])
+    def subscriptions(self, request):
+        queryset = User.objects.filter(
+            following__user=request.user
+        ).prefetch_related('recipes')
+        recipes_limit = request.query_params.get('recipes_limit')
+        context = self.get_serializer_context()
+        if recipes_limit and recipes_limit.isdigit():
+            context['recipes_limit'] = int(recipes_limit)
+        page = self.paginate_queryset(queryset)
+        serializer = SubscriptionSerializer(
+            page, many=True, context=context)
+        return self.get_paginated_response(serializer.data)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -77,7 +148,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.select_related('author').prefetch_related(
         'tags', 'ingredients_amounts__ingredient'
     )
-    pagination_class = CustomPagination
+    pagination_class = Pagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
     permission_classes = [IsAuthorOrReadOnly]
@@ -126,23 +197,22 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = request.user
 
         if request.method == 'POST':
-            if model.objects.filter(user=user, recipe=recipe).exists():
-                return Response(
-                    {'error': error_message['exists']},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            serializer = serializer_class(
+                data={'user': user.id, 'recipe': recipe.id})
+            serializer.is_valid(raise_exception=True)
             instance = model.objects.create(user=user, recipe=recipe)
             serializer = serializer_class(
                 instance, context={'request': request})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        instance = model.objects.filter(user=user, recipe=recipe)
-        if not instance.exists():
-            return Response(
-                {'error': error_message['not_found']},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            deleted_count, _ = model.objects.filter(
+                user=user, recipe=recipe).delete()
+            if deleted_count == 0:
+                return Response(
+                    {'error': error_message['not_found']},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['post', 'delete'])
     def favorite(self, request, pk=None):
@@ -199,77 +269,3 @@ class RecipeViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = (
             'attachment; filename="shopping_list.txt"')
         return response
-
-
-class SubscriptionViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
-    serializer_class = SubscriptionSerializer
-    permission_classes = [IsAuthenticated]
-    pagination_class = CustomPagination
-
-    def get_queryset(self):
-        return CustomUser.objects.filter(
-            following__user=self.request.user
-        ).prefetch_related('recipes')
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        recipes_limit = self.request.query_params.get('recipes_limit')
-        if recipes_limit and recipes_limit.isdigit():
-            context['recipes_limit'] = int(recipes_limit)
-        return context
-
-    def create(self, request, *args, **kwargs):
-        author_id = kwargs.get('author_id')
-        author = get_object_or_404(CustomUser, id=author_id)
-        user = request.user
-
-        if user == author:
-            return Response(
-                {'error': 'Нельзя подписаться на самого себя'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if Subscription.objects.filter(user=user, author=author).exists():
-            return Response(
-                {'error': 'Вы уже подписаны на этого пользователя'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        Subscription.objects.create(user=user, author=author)
-        serializer = self.get_serializer(
-            author, context=self.get_serializer_context())
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def destroy(self, request, *args, **kwargs):
-        author_id = kwargs.get('author_id')
-        author = get_object_or_404(CustomUser, id=author_id)
-        user = request.user
-
-        subscription = Subscription.objects.filter(user=user, author=author)
-        if not subscription.exists():
-            return Response(
-                {'error': 'Вы не подписаны на этого пользователя'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        subscription.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)
-        serializer = self.get_serializer(
-            page, many=True, context=self.get_serializer_context())
-        return self.get_paginated_response(serializer.data)
-
-    @action(detail=False, methods=['get'])
-    def subscriptions(self, request):
-        queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)
-        serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
