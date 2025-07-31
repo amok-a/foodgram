@@ -73,7 +73,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'username', 'email',
             'first_name', 'last_name',
-            'is_subscribed'
+            'is_subscribed', 'avatar'
         )
         read_only_fields = ('id',)
 
