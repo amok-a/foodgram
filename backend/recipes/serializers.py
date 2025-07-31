@@ -265,11 +265,14 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         fields = ('user', 'recipe')
         read_only_fields = ('user',)
 
+    def get_count(self, obj):
+        return ShoppingCart.objects.filter(user=obj.user).count()
+
     def to_representation(self, instance):
-        return ShortRecipeSerializer(
-            instance.recipe,
-            context=self.context
-        ).data
+        data = ShortRecipeSerializer(
+            instance.recipe, context=self.context).data
+        data['cart_count'] = self.get_count(instance)
+        return data
 
 
 class SubscriptionSerializer(UserSerializer):

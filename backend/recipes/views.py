@@ -103,7 +103,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
             Subscription.objects.create(user=user, author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:  # DELETE
+        else:
             deleted_count, _ = Subscription.objects.filter(
                 user=user, author=author).delete()
             if deleted_count == 0:
@@ -139,8 +139,11 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['^name']
+    filterset_fields = {
+        'name': ['istartswith', 'icontains'],
+    }
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -239,6 +242,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 recipe=obj
             ).exists()
         return False
+
+    @action(detail=False, methods=['get'])
+    def shopping_cart_count(self, request):
+        if request.user.is_authenticated:
+            count = ShoppingCart.objects.filter(user=request.user).count()
+        else:
+            cart = request.session.get('shopping_cart', [])
+            count = len(cart)
+        return Response({'count': count})
 
     @action(detail=False, methods=['get'])
     def download_shopping_cart(self, request):
