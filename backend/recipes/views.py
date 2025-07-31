@@ -44,10 +44,12 @@ class UserCreateView(APIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.annotate(recipes_count=Count('recipes'))
-    queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = Pagination
     permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        return User.objects.annotate(recipes_count=Count('recipes'))
 
     @action(detail=False, methods=['get'])
     def me(self, request):
@@ -90,16 +92,22 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
-    def subscribe(self, request, pk=None):
-        author = get_object_or_404(self.get_queryset(), id=pk)
+    def subscribe(self, request, author_id=None):
+        author = get_object_or_404(User, id=author_id)
         user = request.user
+
         if request.method == 'POST':
-            serializer = SubscriptionSerializer(
-                author,
-                data={},
-                context=self.get_serializer_context()
-            )
-            serializer.is_valid(raise_exception=True)
+            if user == author:
+                return Response(
+                    {'error': 'Нельзя подписаться на самого себя'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if Subscription.objects.filter(user=user, author=author).exists():
+                return Response(
+                    {'error': 'Вы уже подписаны на этого пользователя'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             Subscription.objects.create(user=user, author=author)
             serializer = SubscriptionSerializer(
@@ -109,14 +117,15 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         elif request.method == 'DELETE':
-            deleted_count, _ = Subscription.objects.filter(
-                user=user, author=author).delete()
-
-            if deleted_count == 0:
+            subscription = Subscription.objects.filter(
+                user=user, author=author)
+            if not subscription.exists():
                 return Response(
                     {'error': 'Вы не подписаны на этого пользователя'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+
+            subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'],
@@ -124,14 +133,16 @@ class UserViewSet(viewsets.ModelViewSet):
     def subscriptions(self, request):
         queryset = User.objects.filter(
             following__user=request.user
-        ).prefetch_related('recipes')
+        ).annotate(recipes_count=Count('recipes')).prefetch_related('recipes')
         recipes_limit = request.query_params.get('recipes_limit')
         context = self.get_serializer_context()
         if recipes_limit and recipes_limit.isdigit():
             context['recipes_limit'] = int(recipes_limit)
+
         page = self.paginate_queryset(queryset)
         serializer = SubscriptionSerializer(
-            page, many=True, context=context)
+            page, many=True, context=context
+        )
         return self.get_paginated_response(serializer.data)
 
 
