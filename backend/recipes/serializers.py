@@ -66,6 +66,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -266,7 +267,8 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         read_only_fields = ('user',)
 
     def get_count(self, obj):
-        return ShoppingCart.objects.filter(user=obj.user).count()
+        request = self.context.get('request')
+        return ShoppingCart.objects.filter(user=request.user).count()
 
     def to_representation(self, instance):
         data = ShortRecipeSerializer(

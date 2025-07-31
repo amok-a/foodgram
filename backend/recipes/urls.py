@@ -15,10 +15,10 @@ router.register(r'recipes', RecipeViewSet, basename='recipes')
 urlpatterns = [
     path('users/', UserCreateView.as_view(), name='user-create'),
     path('users/subscriptions/',
-         UserViewSet.as_view({'get': 'list'}),
+         UserViewSet.as_view({'get': 'subscriptions'}),
          name='user-subscriptions'),
     path('users/<int:author_id>/subscribe/',
-         UserViewSet.as_view({'post': 'create', 'delete': 'destroy'}),
+         UserViewSet.as_view({'post': 'subscribe', 'delete': 'subscribe'}),
          name='subscribe'),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
