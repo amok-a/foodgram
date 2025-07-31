@@ -91,7 +91,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
     def subscribe(self, request, pk=None):
-        author = get_object_or_404(User, id=pk)
+        author = get_object_or_404(self.get_queryset(), id=pk)
         user = request.user
         if request.method == 'POST':
             serializer = SubscriptionSerializer(
@@ -102,10 +102,16 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
 
             Subscription.objects.create(user=user, author=author)
+            serializer = SubscriptionSerializer(
+                author,
+                context=self.get_serializer_context()
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
+
+        elif request.method == 'DELETE':
             deleted_count, _ = Subscription.objects.filter(
                 user=user, author=author).delete()
+
             if deleted_count == 0:
                 return Response(
                     {'error': 'Вы не подписаны на этого пользователя'},
