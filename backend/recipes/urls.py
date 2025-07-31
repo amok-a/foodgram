@@ -17,7 +17,7 @@ urlpatterns = [
     path('users/subscriptions/',
          UserViewSet.as_view({'get': 'subscriptions'}),
          name='user-subscriptions'),
-    path('users/<int:pk>/subscribe/',
+    path('users/<int:author_id>/subscribe/',
          UserViewSet.as_view({'post': 'subscribe', 'delete': 'subscribe'}),
          name='subscribe'),
     path('auth/', include('djoser.urls')),
