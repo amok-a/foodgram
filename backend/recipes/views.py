@@ -26,7 +26,7 @@ from .serializers import (
 )
 from .pagination import Pagination
 from .permissions import IsAuthorOrReadOnly
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientFilter
 import logging
 from rest_framework.views import APIView
 logger = logging.getLogger(__name__)
@@ -176,9 +176,10 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     pagination_class = None
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['^name']
+    filterset_class = IngredientFilter
+    search_fields = ['name']
     filterset_fields = {
-        'name': ['istartswith', 'icontains'],
+        'name': ['exact', 'icontains', 'istartswith'],
     }
 
 

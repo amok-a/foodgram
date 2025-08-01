@@ -43,6 +43,9 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = '__all__'
+        extra_kwargs = {
+            'name': {'help_text': 'Название ингредиента для фильтрации'}
+        }
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
