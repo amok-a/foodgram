@@ -14,6 +14,9 @@ router.register(r'recipes', RecipeViewSet, basename='recipes')
 
 urlpatterns = [
     path('users/', UserCreateView.as_view(), name='user-create'),
+    path('users/set_password/',
+         UserViewSet.as_view({'post': 'set_password'}),
+         name='user-set-password'),
     path(
         'users/me/avatar/',
         UserViewSet.as_view({'post': 'avatar', 'put': 'avatar',

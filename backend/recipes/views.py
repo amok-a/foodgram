@@ -3,7 +3,7 @@ from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.contrib.auth import update_session_auth_hash
+from djoser.serializers import SetPasswordSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     viewsets, status, filters, permissions
@@ -58,6 +58,19 @@ class UserViewSet(viewsets.ModelViewSet):
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['post'],
+            permission_classes=[permissions.IsAuthenticated])
+    def set_password(self, request):
+        serializer = SetPasswordSerializer(
+            data=request.data, context={'request': request})
+        if serializer.is_valid():
+            user = request.user
+            new_password = serializer.data.get("new_password")
+            user.set_password(new_password)
+            user.save()
+            return Response({"status": "Пароль успешно изменен"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post', 'delete', 'put'],
             permission_classes=[permissions.IsAuthenticated],
