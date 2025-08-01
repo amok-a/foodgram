@@ -60,24 +60,27 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes=[permissions.IsAuthenticated])
     def avatar(self, request):
         user = request.user
-        if request.method == 'POST':
-            serializer = self.get_serializer(user, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            else:
-                return Response(
-                    serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        elif request.method == 'DELETE':
-            if user.avatar:
-                user.avatar.delete(save=True)
-            user.avatar = None
-            user.save(update_fields=['avatar'])
-            return Response(
-                {'message': 'Аватарка успешно удалена'},
-                status=status.HTTP_204_NO_CONTENT
-            )
+        if request.method == 'POST':
+            if 'avatar' not in request.data:
+                return Response(
+                    {'error': 'Файл аватара не предоставлен'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            avatar_file = request.data['avatar']
+            if avatar_file.content_type not in ['image/jpeg', 'image/png']:
+                return Response(
+                    {'error': 'Только JPG/PNG разрешены'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        user.avatar = avatar_file
+        user.save()
+
+        return Response(
+            {'avatar': user.avatar.url},
+            status=status.HTTP_200_OK
+        )
+
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
