@@ -151,7 +151,7 @@ class UserViewSet(viewsets.ModelViewSet):
         )
         return self.get_paginated_response(serializer.data)
 
-    @action(detail=False, methods=['post'],
+    @action(detail=False, methods=['put'],
             permission_classes=[permissions.IsAuthenticated],
             url_path='change-password')
     def set_password(self, request):
