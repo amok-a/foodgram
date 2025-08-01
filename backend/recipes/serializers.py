@@ -284,7 +284,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = ShortRecipeSerializer(
             instance.recipe, context=self.context).data
-        data['cart_count'] = self.get_count(instance)
+        data['cart_count'] = self.get_cart_count(instance)
         return data
 
 
