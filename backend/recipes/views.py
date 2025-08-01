@@ -1,3 +1,5 @@
+import base64
+from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -58,19 +60,34 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post', 'delete', 'put'],
             permission_classes=[permissions.IsAuthenticated],
-            parser_classes=[MultiPartParser, FormParser])
+            parser_classes=[MultiPartParser, FormParser, JSONParser])
     def avatar(self, request):
         user = request.user
-        if request.method in ['POST', 'PUT']:
-            if 'avatar' not in request.FILES:
+        if request.method == 'PUT':
+            if 'avatar' not in request.data:
                 return Response(
-                    {'error': 'Нужно отправить файл в поле avatar'},
+                    {'error': 'Поле "avatar" с Base64 обязательно'},
                     status=400
                 )
+            try:
+                base64_str = request.data['avatar']
+                if not base64_str.startswith('data:image'):
+                    raise ValueError(
+                        'Неверный формат. Должно начинаться с "data:image"')
+                format, imgstr = base64_str.split(';base64,')
+                ext = format.split('/')[-1]
+                file = ContentFile(
+                    base64.b64decode(imgstr),
+                    name=f'avatar.{ext}'
+                )
+                user.avatar.save(file.name, file, save=True)
+                return Response({'url': user.avatar.url})
 
-            user.avatar = request.FILES['avatar']
-            user.save()
-            return Response({'avatar': user.avatar.url})
+            except Exception as e:
+                return Response(
+                    {'error': f'Ошибка обработки изображения: {str(e)}'},
+                    status=400
+                )
 
         elif request.method == 'DELETE':
             user.avatar.delete()
