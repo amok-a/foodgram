@@ -80,13 +80,14 @@ class Base64ImageField(serializers.ImageField):
 class UserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
     avatar = Base64ImageField(required=False, allow_null=True)
+    shopping_cart_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
             'id', 'username', 'email',
             'first_name', 'last_name',
-            'is_subscribed', 'avatar'
+            'is_subscribed', 'avatar', 'shopping_cart_count'
         )
         read_only_fields = ('id',)
 
@@ -106,6 +107,9 @@ class UserSerializer(serializers.ModelSerializer):
                 author=obj
             ).exists()
         return False
+
+    def get_shopping_cart_count(self, obj):
+        return obj.shopping_cart_count
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):

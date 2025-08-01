@@ -31,7 +31,6 @@ class User(AbstractUser):
     avatar = models.ImageField(
         ("Аватар"),
         upload_to="avatars/",
-        default="avatars/default_avatar.png",
         blank=True,
         null=True,
         help_text=("Загрузите изображение профиля.")
@@ -72,3 +71,7 @@ class User(AbstractUser):
     @property
     def shopping_carts(self):
         return self.shopping_cart.all()
+
+    @property
+    def shopping_cart_count(self):
+        return self.shopping_cart.count()
