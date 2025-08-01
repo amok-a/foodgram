@@ -151,11 +151,10 @@ class UserViewSet(viewsets.ModelViewSet):
         )
         return self.get_paginated_response(serializer.data)
 
-
-class ChangePasswordView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def put(self, request):
+    @action(detail=False, methods=['post'],
+            permission_classes=[permissions.IsAuthenticated],
+            url_path='change-password')
+    def set_password(self, request):
         user = request.user
         serializer = PasswordChangeSerializer(data=request.data)
 
@@ -165,16 +164,13 @@ class ChangePasswordView(APIView):
                     {"current_password": ["Неверный текущий пароль"]},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+
             user.set_password(serializer.data.get('new_password'))
             user.save()
             update_session_auth_hash(request, user)
-            return Response(
-                {"status": "Пароль успешно изменен"},
-                status=status.HTTP_200_OK
-            )
+            return Response({"status": "Пароль успешно изменен"})
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     UserViewSet, TagViewSet, IngredientViewSet,
-    RecipeViewSet, UserCreateView, ChangePasswordView
+    RecipeViewSet, UserCreateView
 )
 
 router = DefaultRouter()
@@ -26,8 +26,6 @@ urlpatterns = [
     path('users/<int:author_id>/subscribe/',
          UserViewSet.as_view({'post': 'subscribe', 'delete': 'subscribe'}),
          name='subscribe'),
-    path('change-password/', ChangePasswordView.as_view(),
-         name='change-password'),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
     path('', include(router.urls)),
