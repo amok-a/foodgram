@@ -14,6 +14,11 @@ router.register(r'recipes', RecipeViewSet, basename='recipes')
 
 urlpatterns = [
     path('users/', UserCreateView.as_view(), name='user-create'),
+    path(
+        'users/me/avatar/',
+        UserViewSet.as_view({'post': 'avatar', 'delete': 'avatar'}),
+        name='user-me-avatar'
+    ),
     path('users/subscriptions/',
          UserViewSet.as_view({'get': 'subscriptions'}),
          name='user-subscriptions'),
