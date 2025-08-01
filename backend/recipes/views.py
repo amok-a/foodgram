@@ -265,6 +265,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.user.is_authenticated:
             count = ShoppingCart.objects.filter(user=request.user).count()
             return Response({'count': count})
+        return Response({'count': 0})
 
     @action(detail=False, methods=['get'])
     def download_shopping_cart(self, request):
