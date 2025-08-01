@@ -22,7 +22,7 @@ from .serializers import (
     TagSerializer, IngredientSerializer, UserSerializer,
     RecipeReadSerializer, RecipeWriteSerializer,
     FavoriteSerializer, ShoppingCartSerializer,
-    SubscriptionSerializer, UserCreateSerializer, PasswordChangeSerializer
+    SubscriptionSerializer, UserCreateSerializer
 )
 from .pagination import Pagination
 from .permissions import IsAuthorOrReadOnly
@@ -150,27 +150,6 @@ class UserViewSet(viewsets.ModelViewSet):
             page, many=True, context=context
         )
         return self.get_paginated_response(serializer.data)
-
-    @action(detail=False, methods=['put'],
-            permission_classes=[permissions.IsAuthenticated],
-            url_path='change-password')
-    def set_password(self, request):
-        user = request.user
-        serializer = PasswordChangeSerializer(data=request.data)
-
-        if serializer.is_valid():
-            if not user.check_password(serializer.data.get('current_password')):
-                return Response(
-                    {"current_password": ["Неверный текущий пароль"]},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            user.set_password(serializer.data.get('new_password'))
-            user.save()
-            update_session_auth_hash(request, user)
-            return Response({"status": "Пароль успешно изменен"})
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
