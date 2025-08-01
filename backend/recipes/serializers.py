@@ -64,9 +64,22 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+
+            data = ContentFile(
+                base64.b64decode(imgstr),
+                name=f'image.{ext}'
+            )
+        return super().to_internal_value(data)
+
+
 class UserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
-    avatar = serializers.SerializerMethodField()
+    avatar = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = User
@@ -137,19 +150,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.in_carts.filter(user=request.user).exists()
         return False
-
-
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-
-            data = ContentFile(
-                base64.b64decode(imgstr),
-                name=f'image.{ext}'
-            )
-        return super().to_internal_value(data)
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
