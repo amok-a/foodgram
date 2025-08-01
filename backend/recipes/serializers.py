@@ -269,9 +269,11 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
+    cart_count = serializers.SerializerMethodField()
+
     class Meta:
         model = ShoppingCart
-        fields = ('user', 'recipe')
+        fields = ('user', 'recipe', 'cart_count')
         read_only_fields = ('user',)
 
     def get_cart_count(self, obj):
@@ -280,12 +282,6 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
             return ShoppingCart.objects.filter(user=request.user).count()
         else:
             return len(request.session.get('shopping_cart', []))
-
-    def to_representation(self, instance):
-        data = ShortRecipeSerializer(
-            instance.recipe, context=self.context).data
-        data['cart_count'] = self.get_cart_count(instance)
-        return data
 
 
 class SubscriptionSerializer(UserSerializer):
