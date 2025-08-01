@@ -62,25 +62,38 @@ class UserViewSet(viewsets.ModelViewSet):
         user = request.user
 
         if request.method == 'POST':
-            if 'avatar' not in request.data:
+            avatar_file = request.FILES.get('avatar') or request.data.get(
+                'avatar')
+
+            if not avatar_file:
                 return Response(
                     {'error': 'Файл аватара не предоставлен'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            avatar_file = request.data['avatar']
-            if avatar_file.content_type not in ['image/jpeg', 'image/png']:
-                return Response(
-                    {'error': 'Только JPG/PNG разрешены'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        user.avatar = avatar_file
-        user.save()
 
-        return Response(
-            {'avatar': user.avatar.url},
-            status=status.HTTP_200_OK
-        )
+            if hasattr(avatar_file, 'content_type'):
+                if avatar_file.content_type not in ['image/jpeg', 'image/png']:
+                    return Response(
+                        {'error': 'Только JPG/PNG разрешены'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            user.avatar = avatar_file
+            user.save()
 
+            return Response(
+                {'avatar': user.avatar.url},
+                status=status.HTTP_200_OK
+            )
+
+        elif request.method == 'DELETE':
+            if user.avatar:
+                user.avatar.delete()
+            user.avatar = None
+            user.save()
+            return Response(
+                {'message': 'Аватар успешно удален'},
+                status=status.HTTP_204_NO_CONTENT
+            )
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
