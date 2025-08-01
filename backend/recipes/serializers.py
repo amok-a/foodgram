@@ -276,7 +276,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         fields = ('user', 'recipe', 'cart_count')
         read_only_fields = ('user',)
 
-    def get_cart_count(self, obj):
+    def get_cart_count(self):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return ShoppingCart.objects.filter(user=request.user).count()
