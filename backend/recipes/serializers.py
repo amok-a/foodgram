@@ -118,13 +118,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    cart_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = (
             'id', 'author', 'name', 'image', 'text',
             'ingredients', 'tags', 'cooking_time',
-            'is_favorited', 'is_in_shopping_cart'
+            'is_favorited', 'is_in_shopping_cart', 'cart_count'
         )
         read_only_fields = ('id', 'author')
 
@@ -144,6 +145,12 @@ class RecipeReadSerializer(serializers.ModelSerializer):
                 recipe=obj
             ).exists()
         return False
+
+    def get_cart_count(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return ShoppingCart.objects.filter(user=request.user).count()
+        return 0
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
