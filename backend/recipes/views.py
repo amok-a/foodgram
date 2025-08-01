@@ -56,12 +56,12 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['post', 'delete'],
+    @action(detail=False, methods=['post', 'delete', 'put'],
             permission_classes=[permissions.IsAuthenticated],
             parser_classes=[MultiPartParser, FormParser])
     def avatar(self, request):
         user = request.user
-        if request.method == 'POST':
+        if request.method in ['POST', 'PUT']:
             if 'avatar' not in request.FILES:
                 return Response(
                     {'error': 'Нужно отправить файл в поле avatar'},

@@ -16,8 +16,9 @@ urlpatterns = [
     path('users/', UserCreateView.as_view(), name='user-create'),
     path(
         'users/me/avatar/',
-        UserViewSet.as_view({'post': 'avatar', 'delete': 'avatar'}),
-        name='user-me-avatar'
+        UserViewSet.as_view({'post': 'avatar', 'put': 'avatar',
+                             'delete': 'avatar'}),
+        name='user-avatar'
     ),
     path('users/subscriptions/',
          UserViewSet.as_view({'get': 'subscriptions'}),
