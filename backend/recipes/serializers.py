@@ -103,7 +103,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         source='ingredients_amounts'
     )
     is_favorited = serializers.SerializerMethodField()
-    shopping_cart_count = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
 
@@ -136,8 +135,10 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
+            # Если запрос идет с фильтром is_in_shopping_cart=1
             if request.query_params.get('is_in_shopping_cart') == '1':
                 return True
+        # Иначе проверяем в базе
             return ShoppingCart.objects.filter(
                 user=request.user,
                 recipe=obj
@@ -276,6 +277,19 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         model = ShoppingCart
         fields = ('user', 'recipe')
         read_only_fields = ('user',)
+
+    def get_cart_count(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return ShoppingCart.objects.filter(user=request.user).count()
+        else:
+            return len(request.session.get('shopping_cart', []))
+
+    def to_representation(self, instance):
+        data = ShortRecipeSerializer(
+            instance.recipe, context=self.context).data
+        data['cart_count'] = self.get_cart_count(instance)
+        return data
 
 
 class SubscriptionSerializer(UserSerializer):
