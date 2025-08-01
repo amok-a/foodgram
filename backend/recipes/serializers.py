@@ -103,6 +103,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         source='ingredients_amounts'
     )
     is_favorited = serializers.SerializerMethodField()
+    shopping_cart_count = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
 
@@ -135,6 +136,8 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
+            if request.query_params.get('is_in_shopping_cart') == '1':
+                return True
             return ShoppingCart.objects.filter(
                 user=request.user,
                 recipe=obj
