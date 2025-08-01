@@ -154,9 +154,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class ChangePasswordView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['post']
 
-    def post(self, request):
+    def put(self, request):
         user = request.user
         serializer = PasswordChangeSerializer(data=request.data)
 
