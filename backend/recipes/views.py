@@ -8,7 +8,7 @@ from rest_framework import (
 from django.db.models import Count
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.parsers import JSONParser
+from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 
 from users.models import User
 from .models import (
@@ -57,7 +57,8 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=['post', 'delete'],
-            permission_classes=[permissions.IsAuthenticated])
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[MultiPartParser, FormParser])
     def avatar(self, request):
         user = request.user
 
