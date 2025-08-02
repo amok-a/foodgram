@@ -58,7 +58,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
-    
+
     @action(detail=False, methods=['post'],
             permission_classes=[permissions.IsAuthenticated])
     def set_password(self, request):
@@ -69,7 +69,8 @@ class UserViewSet(viewsets.ModelViewSet):
             new_password = serializer.data.get("new_password")
             user.set_password(new_password)
             user.save()
-            return Response({"status": "Пароль успешно изменен"}, status=status.HTTP_200_OK)
+            return Response({"status": "Пароль успешно изменен"},
+                            status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post', 'delete', 'put'],
