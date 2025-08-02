@@ -31,6 +31,7 @@ class User(AbstractUser):
     avatar = models.ImageField(
         ("Аватар"),
         upload_to="avatars/",
+        default="avatars/default_avatar.png",
         blank=True,
         null=True,
         help_text=("Загрузите изображение профиля.")
