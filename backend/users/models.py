@@ -32,7 +32,6 @@ class User(AbstractUser):
         ("Аватар"),
         upload_to="avatars/",
         blank=True,
-        default=None,
         null=True,
         help_text=("Загрузите изображение профиля.")
     )
