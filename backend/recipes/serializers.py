@@ -156,7 +156,8 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     def get_cart_count(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return ShoppingCart.objects.filter(user=request.user).count()
+            return ShoppingCart.objects.filter(user=request.user,
+                                               recipe=obj).count()
         return 0
 
     def get_is_in_shopping_cart(self, obj):
