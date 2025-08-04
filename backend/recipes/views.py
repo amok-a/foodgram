@@ -96,6 +96,7 @@ class UserViewSet(viewsets.ModelViewSet):
                     base64.b64decode(imgstr),
                     name=f'avatar.{ext}'
                 )
+                user.avatar.save(file.name, file, save=True)
 
                 return Response(
                     {'avatar': user.avatar.url}, status=status.HTTP_200_OK)
