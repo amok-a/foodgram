@@ -79,46 +79,53 @@ class UserViewSet(viewsets.ModelViewSet):
     def avatar(self, request):
         user = request.user
         if request.method == 'PUT':
-            avatar_data = request.data.get('avatar')
-            if avatar_data and str(avatar_data).strip():
-                try:
-                    base64_str = request.data['avatar']
-                    if not base64_str.startswith('data:image'):
-                        return Response(
-                            {'error': 'Неверный формат."data:image"'},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
-                    format, imgstr = base64_str.split(';base64,')
-                    ext = format.split('/')[-1]
-                    file = ContentFile(
-                        base64.b64decode(imgstr),
-                        name=f'avatar.{ext}'
-                    )
-                    if user.avatar:
-                        user.avatar.delete(save=False)
-                    user.avatar.save(file.name, file, save=True)
-                    return Response(
-                        {'avatar': user.avatar.url}, status=status.HTTP_200_OK)
-
-                except Exception as e:
-                    return Response(
-                        {'error': f'Ошибка обработки изображения: {str(e)}'},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-            else:
+            if 'avatar' not in request.data:
                 if user.avatar:
                     return Response(
                         {'avatar': user.avatar.url}, status=status.HTTP_200_OK)
                 else:
                     return Response(
                         {'avatar': None}, status=status.HTTP_200_OK)
+            avatar_data = request.data.get('avatar')
+            if not avatar_data or not str(avatar_data).strip():
+                if user.avatar:
+                    return Response(
+                        {'avatar': user.avatar.url}, status=status.HTTP_200_OK)
+                else:
+                    return Response(
+                        {'avatar': None}, status=status.HTTP_200_OK)
+            try:
+                base64_str = request.data['avatar']
+                if not base64_str.startswith('data:image'):
+                    return Response(
+                        {'error': 'Неверный формат. Ожидается "data:image"'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                format, imgstr = base64_str.split(';base64,')
+                ext = format.split('/')[-1]
+                file = ContentFile(
+                    base64.b64decode(imgstr),
+                    name=f'avatar.{ext}'
+                )
+                if user.avatar:
+                    user.avatar.delete(save=False)
+                user.avatar.save(file.name, file, save=True)
 
+                return Response(
+                    {'avatar': user.avatar.url}, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                return Response(
+                    {'error': f'Ошибка обработки изображения: {str(e)}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         elif request.method == 'DELETE':
             if user.avatar:
                 user.avatar.delete(save=False)
                 user.avatar = None
                 user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
     def subscribe(self, request, author_id=None):
