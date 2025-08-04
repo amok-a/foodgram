@@ -73,64 +73,65 @@ class UserViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post', 'delete', 'put'],
+    @action(detail=False, methods=['put'],
             permission_classes=[permissions.IsAuthenticated],
             parser_classes=[MultiPartParser, FormParser, JSONParser])
-    def avatar(self, request):
+    def upload_avatar(self, request):
+        user = request.user
+        avatar_data = request.data.get('avatar')
+
+        if not avatar_data:
+            return Response(
+                {'error': 'требуется передать изображение'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            base64_str = avatar_data
+
+            if not base64_str.startswith('data:image'):
+                return Response(
+                    {'error': 'Неверный формат. Ожидается "data:image"'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            format, imgstr = base64_str.split(';base64,')
+            ext = format.split('/')[-1]
+            file = ContentFile(
+                base64.b64decode(imgstr),
+                name=f'avatar.{ext}'
+            )
+            if user.avatar:
+                user.avatar.delete(save=False)
+
+            user.avatar.save(file.name, file, save=True)
+
+            return Response(
+                {'avatar': user.avatar.url}, status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            logger.exception(f"Error processing image: {e}")
+            return Response(
+                {'error': f'Ошибка обработки изображения: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(detail=False, methods=['delete'],
+            permission_classes=[permissions.IsAuthenticated])
+    def delete_avatar(self, request):
         user = request.user
 
-        if request.method == 'PUT':
-            avatar_data = request.data.get('avatar')
-            if avatar_data:
-                try:
-                    base64_str = avatar_data
-
-                    if not base64_str.startswith('data:image'):
-                        return Response(
-                            {'error': 'Ожидается "data:image"'},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
-
-                    format, imgstr = base64_str.split(';base64,')
-                    ext = format.split('/')[-1]
-                    file = ContentFile(
-                        base64.b64decode(imgstr),
-                        name=f'avatar.{ext}'
-                    )
-                    if user.avatar:
-                        user.avatar.delete(save=False)
-
-                    user.avatar.save(file.name, file, save=True)
-
-                    return Response(
-                        {'avatar': user.avatar.url}, status=status.HTTP_200_OK
-                    )
-
-                except Exception as e:
-                    logger.exception(f"Error processing image: {e}")
-                    return Response(
-                        {'error': f'Ошибка обработки изображения: {str(e)}'},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-            else:
-                if user.avatar:
-                    return Response(
-                        {'avatar': user.avatar.url}, status=status.HTTP_200_OK
-                    )
-                else:
-                    return Response(
-                        {'avatar': None}, status=status.HTTP_200_OK
-                    )
-
-        elif request.method == 'DELETE':
-            if user.avatar:
-                user.avatar.delete()
-                user.avatar = None
-                user.save()
+        if user.avatar:
+            user.avatar.delete()
+            user.avatar = None
+            user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
         else:
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response(
+                {'error': 'У пользователя нет аватара для удаления'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
