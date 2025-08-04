@@ -18,14 +18,9 @@ urlpatterns = [
          UserViewSet.as_view({'post': 'set_password'}),
          name='user-set-password'),
     path(
-        'users/me/upload_avatar/',
+        'users/me/avatar/',
         UserViewSet.as_view({'put': 'upload_avatar'}),
-        name='user-upload-avatar'
-    ),
-    path(
-        'users/me/delete_avatar/',
-        UserViewSet.as_view({'delete': 'delete_avatar'}),
-        name='user-delete-avatar'
+        name='user-avatar'
     ),
     path('users/subscriptions/',
          UserViewSet.as_view({'get': 'subscriptions'}),

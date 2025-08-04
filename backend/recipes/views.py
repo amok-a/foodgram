@@ -117,22 +117,6 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    @action(detail=False, methods=['delete'],
-            permission_classes=[permissions.IsAuthenticated])
-    def delete_avatar(self, request):
-        user = request.user
-
-        if user.avatar:
-            user.avatar.delete()
-            user.avatar = None
-            user.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(
-                {'error': 'У пользователя нет аватара для удаления'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
     def subscribe(self, request, author_id=None):
