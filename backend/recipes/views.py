@@ -79,16 +79,14 @@ class UserViewSet(viewsets.ModelViewSet):
     def avatar(self, request):
         user = request.user
         if request.method == 'PUT':
-            if 'avatar' not in request.data or not request.data['avatar']:
-                user.avatar.delete(save=False)
-                user.avatar = None
-                user.save()
-                return self._get_user_response(user)
             if 'avatar' not in request.data:
-                return Response(
-                    {'error': 'Поле "avatar" с Base64 обязательно'},
-                    status=400
-                )
+                if user.avatar:
+                    return Response({'avatar': user.avatar.url})
+                else:
+                    return Response(
+                        {'error': 'Поле "avatar" с Base64 обязательно'},
+                        status=400
+                    )
             try:
                 base64_str = request.data['avatar']
                 if not base64_str.startswith('data:image'):
