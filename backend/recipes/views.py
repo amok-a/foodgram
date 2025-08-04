@@ -79,7 +79,8 @@ class UserViewSet(viewsets.ModelViewSet):
     def avatar(self, request):
         user = request.user
         if request.method == 'PUT':
-            if 'avatar' in request.data:
+            avatar_data = request.data.get('avatar')
+            if avatar_data and str(avatar_data).strip():
                 try:
                     base64_str = request.data['avatar']
                     if not base64_str.startswith('data:image'):
