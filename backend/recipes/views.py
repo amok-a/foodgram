@@ -121,10 +121,9 @@ class UserViewSet(viewsets.ModelViewSet):
                 )
         elif request.method == 'DELETE':
             if user.avatar:
-                user.avatar.delete(save=False)
-                user.avatar = None
-                user.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+                return Response({'avatar': user.avatar.url}, status=status.HTTP_200_OK)
+            else:
+                return Response({'avatar': None}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
