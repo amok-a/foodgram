@@ -78,14 +78,27 @@ class UserViewSet(viewsets.ModelViewSet):
             parser_classes=[MultiPartParser, FormParser, JSONParser])
     def avatar(self, request):
         user = request.user
+        logger.debug(f"Request method: {request.method}")
+        logger.debug(f"Request data: {request.data}")
+        logger.debug(f"User avatar before processing: {user.avatar}")
+
         if request.method == 'PUT':
             if 'avatar' not in request.data or not request.data['avatar']:
+                logger.warning(
+                    "PUT request missing 'avatar' data. Sending error response."
+                )
                 return Response(
                     {'error': 'требуется передать изображение'},
-                    status=status.HTTP_400_BAD_REQUEST)
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             try:
                 base64_str = request.data['avatar']
+                logger.debug(f"Received base64 string (first 50 chars): {base64_str[:50]}...")
                 if not base64_str.startswith('data:image'):
+                    logger.warning(
+                        "Invalid format: Expected 'data:image'. Sending error response."
+                    )
                     return Response(
                         {'error': 'Неверный формат. Ожидается "data:image"'},
                         status=status.HTTP_400_BAD_REQUEST
@@ -96,20 +109,33 @@ class UserViewSet(viewsets.ModelViewSet):
                     base64.b64decode(imgstr),
                     name=f'avatar.{ext}'
                 )
+                # Удаляем старый аватар, если есть
+                if user.avatar:
+                    logger.debug("Deleting existing avatar.")
+                    user.avatar.delete(save=False)
                 user.avatar.save(file.name, file, save=True)
+                logger.info(f"Avatar saved successfully. New avatar URL: {user.avatar.url}")
+                logger.debug(f"User avatar after save: {user.avatar}")
 
                 return Response(
-                    {'avatar': user.avatar.url}, status=status.HTTP_200_OK)
+                    {'avatar': user.avatar.url}, status=status.HTTP_200_OK
+                )
 
             except Exception as e:
+                logger.exception(f"Error processing image: {e}")
                 return Response(
                     {'error': f'Ошибка обработки изображения: {str(e)}'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
         elif request.method == 'DELETE':
-            user.avatar.delete()
-            user.avatar = None
-            user.save() 
+            if user.avatar:
+                logger.info("Deleting avatar...")
+                user.avatar.delete()
+                user.avatar = None
+                user.save()
+                logger.info("Avatar deleted successfully.")
+            else:
+                logger.info("No avatar to delete.")
             return Response(status=204)
 
     @action(detail=True, methods=['post', 'delete'],
