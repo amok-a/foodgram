@@ -96,9 +96,6 @@ class UserViewSet(viewsets.ModelViewSet):
                     base64.b64decode(imgstr),
                     name=f'avatar.{ext}'
                 )
-                if user.avatar:
-                    user.avatar.delete(save=False)
-                user.avatar.save(file.name, file, save=True)
 
                 return Response(
                     {'avatar': user.avatar.url}, status=status.HTTP_200_OK)
@@ -109,10 +106,10 @@ class UserViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         elif request.method == 'DELETE':
-            if user.avatar:
-                return Response({'avatar': user.avatar.url}, status=status.HTTP_200_OK)
-            else:
-                return Response({'avatar': None}, status=status.HTTP_200_OK)
+            user.avatar.delete()
+            user.avatar = None
+            user.save() 
+            return Response(status=204)
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
