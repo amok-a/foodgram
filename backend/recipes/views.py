@@ -79,7 +79,6 @@ class UserViewSet(viewsets.ModelViewSet):
     def avatar(self, request):
         user = request.user
         logger.debug(f"Request method: {request.method}")
-        logger.debug(f"Request data: {request.data}")
         logger.debug(f"User avatar before processing: {user.avatar}")
 
         if request.method == 'PUT':
