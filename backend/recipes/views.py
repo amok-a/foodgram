@@ -78,6 +78,9 @@ class UserViewSet(viewsets.ModelViewSet):
             parser_classes=[MultiPartParser, FormParser, JSONParser])
     def avatar(self, request):
         user = request.user
+        if not 'avatar':
+            return Response(
+                {'error': 'Поле "avatar" с Base64 обязательно'}, status=400)
         if request.method == 'PUT':
             if 'avatar' not in request.data:
                 return Response(
@@ -96,7 +99,7 @@ class UserViewSet(viewsets.ModelViewSet):
                     name=f'avatar.{ext}'
                 )
                 user.avatar.save(file.name, file, save=True)
-                return Response({'url': user.avatar.url})
+                return Response({'avatar': user.avatar.url})
 
             except Exception as e:
                 return Response(
