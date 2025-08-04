@@ -78,10 +78,12 @@ class UserViewSet(viewsets.ModelViewSet):
             parser_classes=[MultiPartParser, FormParser, JSONParser])
     def avatar(self, request):
         user = request.user
-        if not 'avatar':
-            return Response(
-                {'error': 'Поле "avatar" с Base64 обязательно'}, status=400)
         if request.method == 'PUT':
+            if 'avatar' not in request.data or not request.data['avatar']:
+                user.avatar.delete(save=False)
+                user.avatar = None
+                user.save()
+                return self._get_user_response(user)
             if 'avatar' not in request.data:
                 return Response(
                     {'error': 'Поле "avatar" с Base64 обязательно'},
