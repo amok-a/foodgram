@@ -19,7 +19,8 @@ urlpatterns = [
          name='user-set-password'),
     path(
         'users/me/avatar/',
-        UserViewSet.as_view({'put': 'upload_avatar'}),
+        UserViewSet.as_view({'put': 'avatar',
+                             'delete': 'avatar'}),
         name='user-avatar'
     ),
     path('users/subscriptions/',

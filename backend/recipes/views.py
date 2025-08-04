@@ -73,7 +73,7 @@ class UserViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post', 'delete', 'put'],
+    @action(detail=False, methods=['delete', 'put'],
             permission_classes=[permissions.IsAuthenticated],
             parser_classes=[MultiPartParser, FormParser, JSONParser])
     def avatar(self, request):
