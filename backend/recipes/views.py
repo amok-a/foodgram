@@ -112,11 +112,26 @@ class UserViewSet(viewsets.ModelViewSet):
                         {'avatar': None}, status=status.HTTP_200_OK)
 
         elif request.method == 'DELETE':
-            if user.avatar:
-                user.avatar.delete(save=False)
-                user.avatar = None
-                user.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            avatar_data = request.data.get('avatar')
+            is_empty = (avatar_data is None
+                        or avatar_data == ''
+                        or avatar_data == 'null'
+                        or (isinstance(avatar_data, str)
+                            and not avatar_data.strip()))
+            if is_empty:
+                if user.avatar:
+                    user.avatar.delete()
+                    user.avatar = None
+                    user.save()
+                    logger.info("Avatar deleted by explicit request")
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                if user.avatar:
+                    return Response(
+                        {'avatar': user.avatar.url}, status=status.HTTP_200_OK)
+                else:
+                    return Response(
+                        {'avatar': None}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
